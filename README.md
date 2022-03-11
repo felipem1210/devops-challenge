@@ -74,6 +74,8 @@ You need to create a s3 bucket to save the tfstate. For that:
 aws s3api create-bucket --acl private --bucket <your_bucket_here> --region <your_aws_region_here>
 ```
 
+**If you want to deploy using tfstate in local file comment the lines mentioned above**
+
 ## Deploying
 
 * Check the vars in `terraform.tfvars` to customize your deploy. You can check `variables.tf` file to see a description of variables.
@@ -101,6 +103,15 @@ terraform output
 ## Test webserver
 
 * Once finished the deploy with `terraform apply` you will see the output `alb_hostname`. Place this hostname in a browser to access the webserver deployed.
+
+## Security extra feature
+
+* Consider installing a VPN or deploying a bastion host in public subnet to access the ec2 machines
+* You can pass a `key_pair_name` created manually by yourself and open SSH port to access the machines.
+
+## Future work
+
+Enable SSM to access machines
 
 # Built With
 

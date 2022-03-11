@@ -120,7 +120,7 @@ resource "aws_launch_template" "this" {
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.instance.id]
   user_data              = base64encode(data.template_file.user_data.rendered)
-  key_name               = var.key_pair_name
+  key_name               = var.key_pair_name != "" ? var.key_pair_name : null
 
   iam_instance_profile {
     arn  = aws_iam_instance_profile.ec2-instances.arn

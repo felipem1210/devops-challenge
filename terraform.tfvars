@@ -10,7 +10,7 @@ public_subnets  = ["10.0.128.0/19", "10.0.160.0/19", "10.0.192.0/19"]
 # EC2 parameters
 max_asg_size  = 3
 min_asg_size  = 1
-key_pair_name = "testing"
+key_pair_name = ""
 # Security group for EC2 instance
 ec2_ingress_rules = [
   {
@@ -18,7 +18,7 @@ ec2_ingress_rules = [
     port = 80
   },
   {
-    cidr_block = ["0.0.0.0/0"]
+    cidr_block = ["10.0.0.0/16"]
     port = 22
   }
 ]
