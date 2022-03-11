@@ -23,6 +23,9 @@ data "aws_ami" "ubuntu" {
 # ---------------------------------------------------------------------------------------------------------------------
 data "template_file" "user_data" {
   template = file("${path.module}/templates/user-data.tpl")
+  vars = {
+    bucket_name = var.s3_bucket_name
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -30,7 +33,7 @@ data "template_file" "user_data" {
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_placement_group" "this" {
   name     = local.prefix
-  strategy = "cluster"
+  strategy = "spread"
 }
 
 resource "aws_autoscaling_group" "this" {
@@ -41,10 +44,9 @@ resource "aws_autoscaling_group" "this" {
   health_check_type         = var.asg_health_check_type
   desired_capacity          = var.asg_desired_capacity
   force_delete              = var.asg_force_delete
-  #placement_group           = aws_placement_group.this.id
   vpc_zone_identifier       = aws_subnet.private.*.id
-  #target_group_arns         = #TODO
-
+  target_group_arns         = [aws_lb_target_group.tg.arn]
+  
   launch_template {
     id      = aws_launch_template.this.id
     version = aws_launch_template.this.latest_version
@@ -117,14 +119,11 @@ resource "aws_launch_template" "this" {
   image_id               = var.ami_id == "" ? data.aws_ami.ubuntu.id : var.ami_id
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.instance.id]
-  user_data              = data.template_file.user_data.rendered
+  user_data              = base64encode(data.template_file.user_data.rendered)
+  key_name               = var.key_pair_name
 
-  network_interfaces {
-    associate_public_ip_address = true
-  }
-
-  placement {
-    group_name = aws_placement_group.this.id
+  iam_instance_profile {
+    arn  = aws_iam_instance_profile.ec2-instances.arn
   }
 
   tag_specifications {
@@ -144,7 +143,7 @@ resource "aws_launch_template" "this" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_security_group" "instance" {
-  name_prefix            = "${local.prefix}-sg"
+  name                   = "${local.prefix}-sg"
   description            = "Security Group for EC2 instances"
   vpc_id                 = aws_vpc.this.id
   revoke_rules_on_delete = "true"
@@ -154,7 +153,7 @@ resource "aws_security_group" "instance" {
   }
   tags = merge(
     {
-      "Name" = "${local.prefix}-sg"
+      "Name" = "${local.prefix}-ec2-sg"
     },
     var.custom_tags,
   )
@@ -170,11 +169,12 @@ resource "aws_security_group" "instance" {
   dynamic "ingress" {
     for_each = var.ec2_ingress_rules
     content {
-      description = "Allow inbound access to port ${ingress.value["port"]}."
-      from_port   = ingress.value["port"]
-      to_port     = ingress.value["port"]
-      protocol    = "tcp"
-      cidr_blocks = ingress.value["cidr_block"] != [] ? ingress.value["cidr_block"] : null
+      description     = "Allow inbound access to port ${ingress.value["port"]}."
+      from_port       = ingress.value["port"]
+      to_port         = ingress.value["port"]
+      protocol        = "tcp"
+      cidr_blocks     = ingress.value["cidr_block"] != [] ? ingress.value["cidr_block"] : null
+      security_groups = ingress.value["port"] == 80 ? [aws_security_group.lb_sg.id] : null
     }
   }
 }

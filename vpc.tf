@@ -26,7 +26,6 @@ resource "aws_vpc" "this" {
 
 # Create an Internet Gateway for our VPC
 resource "aws_internet_gateway" "this" {
-
   vpc_id = aws_vpc.this.id
   tags = merge(
     {
@@ -149,7 +148,7 @@ resource "aws_subnet" "private" {
 
   tags = merge(
     {
-      "Name" = format("%s-public-%s", local.prefix, element(var.azs, count.index))
+      "Name" = format("%s-private-%s", local.prefix, element(var.azs, count.index))
     },
     var.custom_tags,
     var.private_subnet_custom_tags,

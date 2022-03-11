@@ -12,6 +12,11 @@ terraform {
       version = "~> 3.0"
     }
   }
+  backend "s3" {
+    bucket = "awesome-challenge-terraform"
+    key    = "terraform.tfstate"
+    region = "us-east-1"
+  }  
 }
 
 provider "aws" {

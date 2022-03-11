@@ -114,6 +114,12 @@ variable "ami_id" {
   default     = ""
 }
 
+variable "key_pair_name" {
+  description = "The key pair name to connect through ssh"
+  type        = string
+  default     = ""
+}
+
 variable "instance_type" {
   description = "The type of the instance"
   type        = string
@@ -156,4 +162,18 @@ variable "cpu_minimum_value_scale_down" {
   description = "The minimum value of cpu used by EC2 instances to scale down instance in ASG"
   type        = string
   default     = "60"
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# S3 PARAMETERS
+# ----------------------------------------------------------------------------------------------------------------------
+
+variable "s3_bucket_name" {
+  description = "The name of the s3 bucket to create"
+  type        = string
+}
+variable "s3_object" {
+  description = "An object to create inside de bucket"
+  type        = string
+  default     = ""
 }
